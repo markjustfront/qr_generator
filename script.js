@@ -17,26 +17,24 @@ function generateQR() {
         body: `text=${encodeURIComponent(qrText)}`
     })
     .then(response => {
-        // Check if response is JSON
-        const contentType = response.headers.get('Content-Type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response is not JSON');
-        }
-        return response.json();
+        console.log('Response status:', response.status);
+        return response.text(); // Get raw response
     })
-    .then(data => {
-        if (data.success) {
-            qrResult.innerHTML = `<img src="${data.image}" alt="QR Code">`;
-        } else {
-            qrResult.innerHTML = `<p>Error: ${data.error}</p>`;
+    .then(text => {
+        console.log('Raw response:', text); // Log raw response
+        try {
+            const data = JSON.parse(text); // Try parsing as JSON
+            if (data.success) {
+                qrResult.innerHTML = `<img src="${data.image}" alt="QR Code">`;
+            } else {
+                qrResult.innerHTML = `<p>Error: ${data.error}</p>`;
+            }
+        } catch (e) {
+            qrResult.innerHTML = `<p>JSON Parse Error: ${text}</p>`;
         }
     })
     .catch(error => {
         qrResult.innerHTML = '<p>Error generating QR code.</p>';
         console.error('Error:', error);
-        // Optionally log the response for debugging
-        fetch('generate.php', { method: 'POST', body: `text=${encodeURIComponent(qrText)}` })
-            .then(res => res.text())
-            .then(text => console.log('Raw response:', text));
     });
 }
